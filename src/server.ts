@@ -10,13 +10,13 @@ let port;
 let API_KEY;
 
 if (process.env.NODE_ENV === 'production') {
+    console.log(`NODE_ENV = production`);
     API_KEY = process.env.API_KEY;
     port = process.env.PORT;
 } else {
-    console.log(`NODE_ENV = development`)
+    console.log(`NODE_ENV = development`);
     port = 8080;
     API_KEY = require('./keys/keys').GOOGLE_API_KEY;
-    console.log(API_KEY);
 }
 
 server.get('/', (req, res) => {
