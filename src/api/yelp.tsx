@@ -49,17 +49,37 @@ const x = {
     "display_phone": "(808) 737-5591",
     "distance": 905.7707653128928
 };
-
+function randomIndex(range): number {
+    return Math.floor(Math.random() * Math.floor(range));
+}
+function randomize(businesses) {
+    let randomized = [];
+    let orderedBusinesses = [...businesses];
+    while(orderedBusinesses.length > 0) {
+        const oblen = orderedBusinesses.length;
+        const rand = randomIndex(oblen);
+        if(rand === oblen-1) {
+            randomized.push(orderedBusinesses.pop())
+        } else {
+            const temp = orderedBusinesses[rand];
+            randomized.push(temp);
+            orderedBusinesses[rand] = orderedBusinesses[oblen-1];
+            orderedBusinesses.pop();
+        }
+    }
+    return randomized;
+}
 async function getYelpDessertPlaces(lat:number, lng:number) {
     const hostname = 'https://api.yelp.com/v3/businesses/search?';
-    const radius = 1500;
-    const open_now = 'false';
+    const radius = 2000;
+    const open_now = 'true';
     const queries = {
         latitude: lat,
         longitude: lng,
         radius,
         categories: 'desserts,All',
-        open_now
+        open_now,
+        limit: 50
     }
 
     let queryParams = '';
@@ -78,7 +98,10 @@ async function getYelpDessertPlaces(lat:number, lng:number) {
         const remainingCalls = response.headers['ratelimit-remaining'];
         console.log(`Remaining Calls: ${remainingCalls}`);
         const { businesses } = response.data;
-        return businesses;
+        console.log(`Total Matches: ${response.data.total}`);
+        let randomizedBusinesses = randomize(businesses);
+        console.log(`Randomized Matches: ${randomizedBusinesses.length}`);
+        return randomizedBusinesses;
     }).catch(err => {
         console.error(err);
     });
