@@ -34,6 +34,7 @@ server.get('/', (req, res) => {
  */
 server.get('/foodie', async (req, res) => {
     const { lat, lng, offset, open_now } = req.query;
+    const harder = (req.query.harder === 'true');
     console.log(req.query);
     const data = await getYelpDessertPlaces(lat, lng, parseInt(offset), open_now, harder);
     res.send(data);
