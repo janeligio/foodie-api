@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "description": "Foodie application.",
   "main": "dist/server.js",
+  "engines": {
+    "node": "12.18.3"
+  },
   "scripts": {
-    "start": "tsc && node dist/server.js",
+    "dev": "tsc && node dist/server.js",
+    "start":"node dist/server.js",
+    "postinstall":"tsc",
+    "deploy": "git add . && git commit -m Heroku && git push heroku master",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jan Iverson Eligio",
