@@ -23,11 +23,20 @@ server.get('/', (req, res) => {
     res.send("Hello TypeScript world!");
 });
 
+/**
+ * Route: /foodie
+ * Params:
+ *  lat: Latitude
+ *  lng: Longitude
+ *  address: Address
+ *  offset: Offset
+ *  categories: comma-delimeted string of categories
+ */
 server.get('/foodie', async (req, res) => {
-    const { lat, lng } = req.query;
+    const { lat, lng, offset, open_now } = req.query;
     console.log(req.query);
-    const places = await getYelpDessertPlaces(lat, lng);
-    res.send(places);
+    const data = await getYelpDessertPlaces(lat, lng, parseInt(offset), open_now, harder);
+    res.send(data);
 })
 
 server.listen(port, err => {

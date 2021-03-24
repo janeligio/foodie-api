@@ -1,54 +1,6 @@
 const KEY = process.env.YELP_API_KEY || require("../keys/keys").YELP_API_KEY;
 import axios from 'axios';
 
-const x = {
-    "id": "7bJ83Jb_DTAF0eOw8j9fow",
-    "alias": "leonards-bakery-honolulu",
-    "name": "Leonard's Bakery",
-    "image_url": "https://s3-media4.fl.yelpcdn.com/bphoto/GuPJhMjerDiz2fZLJNN-rA/o.jpg",
-    "is_closed": false,
-    "url": "https://www.yelp.com/biz/leonards-bakery-honolulu?adjust_creative=c952kon9Ky0mDZVqm79gbQ&utm_campaign=yelp_api_v3&utm_medium=api_v3_business_search&utm_source=c952kon9Ky0mDZVqm79gbQ",
-    "review_count": 6992,
-    "categories": [
-        {
-            "alias": "bakeries",
-            "title": "Bakeries"
-        },
-        {
-            "alias": "desserts",
-            "title": "Desserts"
-        },
-        {
-            "alias": "donuts",
-            "title": "Donuts"
-        }
-    ],
-    "rating": 4.5,
-    "coordinates": {
-        "latitude": 21.2849205022593,
-        "longitude": -157.813274525131
-    },
-    "transactions": [
-        "delivery"
-    ],
-    "price": "$",
-    "location": {
-        "address1": "933 Kapahulu Ave",
-        "address2": "",
-        "address3": "",
-        "city": "Honolulu",
-        "zip_code": "96816",
-        "country": "US",
-        "state": "HI",
-        "display_address": [
-            "933 Kapahulu Ave",
-            "Honolulu, HI 96816"
-        ]
-    },
-    "phone": "+18087375591",
-    "display_phone": "(808) 737-5591",
-    "distance": 905.7707653128928
-};
 function randomIndex(range): number {
     return Math.floor(Math.random() * Math.floor(range));
 }
@@ -69,18 +21,22 @@ function randomize(businesses) {
     }
     return randomized;
 }
-async function getYelpDessertPlaces(lat:number, lng:number) {
+async function getYelpDessertPlaces(lat:number, lng:number, offset: number | undefined, open: boolean | undefined, harder: boolean | undefined) {
     const hostname = 'https://api.yelp.com/v3/businesses/search?';
-    const radius = 2000;
+    const radius = harder ? 5000 : 2000;
     const open_now = 'true';
+    const limit = 50;
     const queries = {
         latitude: lat,
         longitude: lng,
         radius,
         categories: 'desserts,All',
-        open_now,
-        limit: 50
+        open_now: open,
+        limit,
+        offset
     }
+
+    console.log(queries);
 
     let queryParams = '';
     for(const [key, value] of Object.entries(queries)) {
@@ -101,9 +57,27 @@ async function getYelpDessertPlaces(lat:number, lng:number) {
         console.log(`Total Matches: ${response.data.total}`);
         let randomizedBusinesses = randomize(businesses);
         console.log(`Randomized Matches: ${randomizedBusinesses.length}`);
-        return randomizedBusinesses;
+        const total = response.data.total;
+        let newOffset;
+        if((offset+limit) > total) {
+            newOffset = 0;
+        } else {
+            newOffset = offset + limit;
+        }
+        console.log(`New offset:${newOffset}`)
+        const data = {
+            total,
+            businesses: randomizedBusinesses,
+            offset: newOffset
+        };
+        return data;
     }).catch(err => {
         console.error(err);
+        return {
+            total: 0,
+            businesses: [],
+            error: err
+        }
     });
 }
 
