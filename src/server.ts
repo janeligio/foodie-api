@@ -1,7 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const { getGoogleDessertPlaces } = require("./api/google");
-const { getYelpDessertPlaces } = require("./api/yelp");
+import { testGetYelpDessertPlaces } from './api/yelp.test';
+import { getYelpDessertPlaces } from './api/yelp';
 
 const server = express();
 server.use(cors());
@@ -20,7 +21,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 server.get('/', (req, res) => {
-    res.send("Hello TypeScript world!");
+    res.send("Foodie API");
 });
 
 /**
@@ -33,12 +34,34 @@ server.get('/', (req, res) => {
  *  categories: comma-delimeted string of categories
  */
 server.get('/foodie', async (req, res) => {
-    const { lat, lng, offset, open_now } = req.query;
+    const { lat, lng, address, offset, open_now } = req.query;
     const harder = (req.query.harder === 'true');
     console.log(req.query);
-    const data = await getYelpDessertPlaces(lat, lng, parseInt(offset), open_now, harder);
+    const data = await getYelpDessertPlaces(
+        (parseInt(lat) || undefined), 
+        (parseInt(lng) || undefined), 
+        (address || undefined), 
+        parseInt(offset), 
+        open_now, 
+        harder);
+        
     res.send(data);
-})
+});
+
+server.get('/foodie/test', async (req,res) => {
+    const { lat, lng, address, offset, open_now } = req.query;
+    const harder = (req.query.harder === 'true');
+    console.log(req.query);
+    const data = await testGetYelpDessertPlaces(
+        (parseInt(lat) || undefined), 
+        (parseInt(lng) || undefined), 
+        (address || undefined), 
+        parseInt(offset), 
+        open_now, 
+        harder);
+
+    res.send(data);
+});
 
 server.listen(port, err => {
     if(err) {

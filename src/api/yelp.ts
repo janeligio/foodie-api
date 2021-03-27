@@ -1,34 +1,33 @@
 const KEY = process.env.YELP_API_KEY || require("../keys/keys").YELP_API_KEY;
 import axios from 'axios';
+import { isUndefined, randomizeBusinesses} from '../util/util';
 
-function randomIndex(range): number {
-    return Math.floor(Math.random() * Math.floor(range));
-}
-function randomize(businesses) {
-    let randomized = [];
-    let orderedBusinesses = [...businesses];
-    while(orderedBusinesses.length > 0) {
-        const oblen = orderedBusinesses.length;
-        const rand = randomIndex(oblen);
-        if(rand === oblen-1) {
-            randomized.push(orderedBusinesses.pop())
-        } else {
-            const temp = orderedBusinesses[rand];
-            randomized.push(temp);
-            orderedBusinesses[rand] = orderedBusinesses[oblen-1];
-            orderedBusinesses.pop();
-        }
-    }
-    return randomized;
-}
-async function getYelpDessertPlaces(lat:number, lng:number, offset: number | undefined, open: boolean | undefined, harder: boolean | undefined) {
+export async function getYelpDessertPlaces(lat:number|undefined, lng:number|undefined, address:string|undefined, offset: number | undefined, open: boolean | undefined, harder: boolean | undefined) {
     const hostname = 'https://api.yelp.com/v3/businesses/search?';
     const radius = harder ? 5000 : 2000;
     const open_now = 'true';
     const limit = 50;
+
+    let latitude;
+    let longitude;
+    let addr;
+    if(!isUndefined(lat) && !isUndefined(lng)) {
+        latitude = lat;
+        longitude = lng;
+        addr = undefined;
+    } else if(!isUndefined(address)) {
+        addr = address;
+    } else {
+        return {
+            total: 0,
+            businesses: [],
+            error: 'Error: Must specify lat/lng coordinate or address.'
+        }
+    }
+
     const queries = {
-        latitude: lat,
-        longitude: lng,
+        latitude, longitude,
+        location: addr,
         radius,
         categories: 'desserts,All',
         open_now: open,
@@ -36,28 +35,27 @@ async function getYelpDessertPlaces(lat:number, lng:number, offset: number | und
         offset
     }
 
-    console.log(queries);
+    // console.log(queries);
 
     let queryParams = '';
     for(const [key, value] of Object.entries(queries)) {
-        queryParams += `${key}=${value}&`;
+        if(typeof value !== 'undefined') {
+            queryParams += `${key}=${value}&`;
+        }
     }
-    
     return axios({
         method:'get',
         url: hostname + queryParams,
         headers: {'Access-Control-Allow-Origin':'*',
             'Authorization': `Bearer ${KEY}`}
-    })
-    .then(response => {
+    }).then(response => {
         // console.log(response.data.businesses);
         const remainingCalls = response.headers['ratelimit-remaining'];
         console.log(`Remaining Calls: ${remainingCalls}`);
-        const { businesses } = response.data;
-        console.log(`Total Matches: ${response.data.total}`);
-        let randomizedBusinesses = randomize(businesses);
+        const { businesses, total } = response.data;
+        console.log(`Total Matches: ${total}`);
+        let randomizedBusinesses = randomizeBusinesses(businesses);
         console.log(`Randomized Matches: ${randomizedBusinesses.length}`);
-        const total = response.data.total;
         let newOffset;
         if((offset+limit) > total) {
             newOffset = 0;
@@ -81,5 +79,5 @@ async function getYelpDessertPlaces(lat:number, lng:number, offset: number | und
     });
 }
 
-module.exports = { getYelpDessertPlaces }
-exports = {}
+// module.exports = { getYelpDessertPlaces, _getYelpDessertPlaces }
+// exports = {}
