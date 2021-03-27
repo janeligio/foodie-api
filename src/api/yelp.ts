@@ -25,7 +25,6 @@ export async function getYelpDessertPlaces(
 
     let queryParams = '';
     for (const [key, value] of Object.entries(queries)) {
-        console.log(`${key}: ${value}`);
         if (value && typeof value !== 'undefined') {
             queryParams += `${key}=${value}&`;
         }
@@ -46,7 +45,6 @@ export async function getYelpDessertPlaces(
         let randomizedBusinesses = randomizeBusinesses(businesses);
         let newOffset = calculateNextOffset(offset, total);
 
-        console.log(`New offset:${newOffset}`)
         const data = {
             total,
             businesses: randomizedBusinesses,
