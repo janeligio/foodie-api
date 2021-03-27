@@ -33,30 +33,32 @@ server.get('/', (req, res) => {
  *  offset: Offset
  *  categories: comma-delimeted string of categories
  */
-server.get('/foodie', async (req, res) => {
-    const { lat, lng, address, offset, open_now } = req.query;
-    const harder = (req.query.harder === 'true');
+server.get('/foodie/:foodType', async (req, res) => {
+    const { lat, lng, address, offset, open_now, harder } = req.query;
+    const { foodType } = req.params;
     console.log(req.query);
     const data = await getYelpDessertPlaces(
-        (parseInt(lat) || undefined), 
-        (parseInt(lng) || undefined), 
-        (address || undefined), 
-        parseInt(offset), 
+        lat, 
+        lng, 
+        address,
+        foodType,
+        offset, 
         open_now, 
         harder);
-        
+
     res.send(data);
 });
 
-server.get('/foodie/test', async (req,res) => {
-    const { lat, lng, address, offset, open_now } = req.query;
-    const harder = (req.query.harder === 'true');
+server.get('/foodie/test/:foodType', async (req,res) => {
+    const { lat, lng, address, offset, open_now, harder } = req.query;
+    const { foodType } = req.params;
     console.log(req.query);
     const data = await testGetYelpDessertPlaces(
-        (parseInt(lat) || undefined), 
-        (parseInt(lng) || undefined), 
-        (address || undefined), 
-        parseInt(offset), 
+        lat, 
+        lng, 
+        address,
+        foodType,
+        offset, 
         open_now, 
         harder);
 
