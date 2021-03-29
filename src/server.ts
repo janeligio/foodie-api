@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const { getGoogleDessertPlaces } = require("./api/google");
-import { testGetYelpBusinsses } from './api/yelp.test';
-import { getYelpDessertPlaces } from './api/yelp';
+import { testGetYelpBusinesses } from './api/yelp.test';
+import { getYelpBusinesses } from './api/yelp';
 
 const server = express();
 server.use(cors());
@@ -36,8 +36,8 @@ server.get('/', (req, res) => {
 server.get('/foodie/:foodType', async (req, res) => {
     const { lat, lng, address, offset, open_now, harder } = req.query;
     const { foodType } = req.params;
-    console.log(req.query);
-    const data = await getYelpDessertPlaces(
+    // console.log(req.query);
+    const data = await getYelpBusinesses(
         lat, 
         lng, 
         address,
@@ -53,7 +53,7 @@ server.get('/foodie/test/:foodType', async (req,res) => {
     const { lat, lng, address, offset, open_now, harder } = req.query;
     const { foodType } = req.params;
     console.log(req.query);
-    const data = await testGetYelpBusinsses(
+    const data = await testGetYelpBusinesses(
         lat, 
         lng, 
         address,

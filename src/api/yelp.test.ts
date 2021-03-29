@@ -3,7 +3,7 @@ import { randomizeBusinesses, extrapolateQuery, calculateNextOffset, nextRequest
 const KEY = process.env.YELP_API_KEY || require("../keys/keys").YELP_API_KEY;
 
 
-export async function testGetYelpBusinsses(
+export async function testGetYelpBusinesses(
     lat: string | undefined,
     lng: string | undefined,
     address: string | undefined,
