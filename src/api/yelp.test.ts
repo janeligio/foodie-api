@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { randomizeBusinesses, extrapolateQuery, calculateNextOffset } from '../util/util';
+import { randomizeBusinesses, extrapolateQuery, calculateNextOffset, nextRequestOffsets, buildQueryParams } from '../util/util';
 const KEY = process.env.YELP_API_KEY || require("../keys/keys").YELP_API_KEY;
 
 
-export async function testGetYelpDessertPlaces(
+export async function testGetYelpBusinsses(
     lat: string | undefined,
     lng: string | undefined,
     address: string | undefined,
@@ -24,45 +24,86 @@ export async function testGetYelpDessertPlaces(
         }
     }
 
-    let queryParams = '';
-    for (const [key, value] of Object.entries(queries)) {
-        console.log(`${key}: ${value}`);
-        if (value && typeof value !== 'undefined') {
-            queryParams += `${key}=${value}&`;
-        }
-    }
+    let queryParams = buildQueryParams(queries);
 
     console.log(queryParams);
-    return axios({
-        method: 'get',
-        url: hostname + queryParams,
-        headers: {
+
+    
+    let initialRequest;
+
+    try {
+        initialRequest = await axios({method: 'get', url: hostname + queryParams, headers: {
             'Access-Control-Allow-Origin': '*',
             'Authorization': `Bearer ${KEY}`
-        }
-    }).then(response => {
-        // console.log(response.data.businesses);
-        const remainingCalls = response.headers['ratelimit-remaining'];
-        console.log(`Remaining Calls: ${remainingCalls}`);
-        const { businesses, total } = response.data;
-        console.log(`Total Matches: ${total}`);
-        let randomizedBusinesses = randomizeBusinesses(businesses);
-        console.log(`Randomized Matches: ${randomizedBusinesses.length}`);
-        let newOffset = calculateNextOffset(offset, total);
-
-        console.log(`New offset:${newOffset}`)
-        const data = {
-            total,
-            businesses: randomizedBusinesses,
-            offset: newOffset
-        };
-        return data;
-    }).catch(err => {
-        console.error(err);
+        }});
+    } catch(error) {
+        console.error(error);
         return {
             total: 0,
             businesses: [],
-            error: err
+            error
         }
-    });
+    }
+
+    let businesses = [...initialRequest.data.businesses];
+    let total = initialRequest.data.total;
+    let newOffset = 0;
+    const offsets = nextRequestOffsets(parseInt(offset), total);
+
+    if(offsets.length > 0) {
+        let requests = [];
+        offsets.forEach(offset => {
+            const newQueries = {...queries};
+            newQueries.offset = offset;
+            const queryString = buildQueryParams(newQueries);
+            requests.push(axios({method: 'get', url: hostname + queryString, headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Authorization': `Bearer ${KEY}`
+                }})
+            );
+        })
+
+        let restBusinesses;
+        try {
+            restBusinesses = await Promise.all(requests);
+        } catch(error) {
+            console.error(error);
+            return {
+                total: 0,
+                businesses: [],
+                error
+            }
+        }
+
+        restBusinesses.forEach(response => {
+            businesses = [...businesses, ...response.data.businesses];
+        });
+
+        newOffset = calculateNextOffset(offsets[offsets.length-1], total);
+        const remainingCalls = restBusinesses[restBusinesses.length-1].headers['ratelimit-remaining'];
+        console.log(`Total businesses: ${total}`);
+        console.log(`Total businesses returned: ${businesses.length}`);
+        console.log(`Returned businesses in range: ${offset}-${newOffset || total}`);
+        console.log(`New offset: ${newOffset}`);
+        console.log(`Remaining calls: ${remainingCalls}`);
+        return {
+            total,
+            businesses: randomizeBusinesses(businesses),
+            offset: newOffset
+        };
+    } else {
+        newOffset = calculateNextOffset(offset, total);
+        const remainingCalls = initialRequest.headers['ratelimit-remaining'];
+        console.log(`Total businesses: ${total}`);
+        console.log(`Total businesses returned: ${businesses.length}`);
+        console.log(`New offset: ${newOffset}`);
+        console.log(`Returned businesses in range: ${offset}-${newOffset || total}`);
+        console.log(`Remaining calls: ${remainingCalls}`);
+
+        return {
+            total,
+            businesses: randomizeBusinesses(businesses),
+            offset: newOffset
+        };
+    }
 }

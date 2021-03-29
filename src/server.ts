@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { getGoogleDessertPlaces } = require("./api/google");
-import { testGetYelpDessertPlaces } from './api/yelp.test';
+import { testGetYelpBusinsses } from './api/yelp.test';
 import { getYelpDessertPlaces } from './api/yelp';
 
 const server = express();
@@ -53,15 +53,16 @@ server.get('/foodie/test/:foodType', async (req,res) => {
     const { lat, lng, address, offset, open_now, harder } = req.query;
     const { foodType } = req.params;
     console.log(req.query);
-    const data = await testGetYelpDessertPlaces(
+    const data = await testGetYelpBusinsses(
         lat, 
         lng, 
         address,
         foodType,
-        offset, 
-        open_now, 
+        offset,
+        open_now,
         harder);
 
+    console.log(`Data businesses field length: ${data.businesses.length}`)
     res.send(data);
 });
 

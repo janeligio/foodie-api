@@ -88,3 +88,34 @@ export function calculateNextOffset(offset, total):number {
        return parseInt(offset) + limit;
     }
 }
+
+export function nextRequestOffsets(offset, total): number[] {
+    const MAX_BUSINESSES = 200;
+    const MAX_BUSINESSES_RETURNED = 50;
+
+    const newOffset = offset + MAX_BUSINESSES_RETURNED;
+    const range = total - newOffset;
+    let numRequests = 0;
+    if(range <= MAX_BUSINESSES) {
+        numRequests = range / MAX_BUSINESSES_RETURNED;
+    } else {
+        numRequests = MAX_BUSINESSES / MAX_BUSINESSES_RETURNED;
+    }
+    let offsets:number[] = [];
+    for(let i = 0; i < numRequests; i++) {
+        offsets.push(newOffset+(i * MAX_BUSINESSES_RETURNED));
+    }
+    return offsets;
+}
+
+export function buildQueryParams(queries) {
+    let queryParams = '';
+
+    for (const [key, value] of Object.entries(queries)) {
+        if (value && typeof value !== 'undefined') {
+            queryParams += `${key}=${value}&`;
+        }
+    }
+    console.log(queryParams);
+    return queryParams.slice(0, queryParams.length-1);
+}
