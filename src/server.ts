@@ -1,9 +1,10 @@
-import cors from "cors";
+const express = require("express");
+const path = require("path");
+const cors =  require("cors");
 import { testGetYelpBusinesses } from './api/yelp.test';
 import { getYelpBusinesses } from './api/yelp';
 
-const server = require("express")().use(cors());
-
+const server = express().use(cors());
 let port;
 
 if (process.env.NODE_ENV === 'production') {
@@ -15,7 +16,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 server.get('/', (req, res) => {
-    res.send("Foodie API");
+    const message = 'Foodie API\nSite live at: https://goofy-goodall-2ea514.netlify.app';
+    res.send(message);
 });
 
 /**
