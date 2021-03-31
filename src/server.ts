@@ -1,23 +1,17 @@
-const express = require("express");
-const cors = require("cors");
-const { getGoogleDessertPlaces } = require("./api/google");
+import cors from "cors";
 import { testGetYelpBusinesses } from './api/yelp.test';
 import { getYelpBusinesses } from './api/yelp';
 
-const server = express();
-server.use(cors());
+const server = require("express")().use(cors());
 
 let port;
-let API_KEY;
 
 if (process.env.NODE_ENV === 'production') {
     console.log(`NODE_ENV = production`);
-    API_KEY = process.env.API_KEY;
     port = process.env.PORT;
 } else {
     console.log(`NODE_ENV = development`);
     port = 8080;
-    API_KEY = require('./keys/keys').GOOGLE_API_KEY;
 }
 
 server.get('/', (req, res) => {
@@ -25,27 +19,21 @@ server.get('/', (req, res) => {
 });
 
 /**
- * Route: /foodie
+ * Route: /foodie/:foodType
  * Params:
+ *  foodType: 'meal' | 'dessert'
+ * Queries:
  *  lat: Latitude
  *  lng: Longitude
- *  address: Address
- *  offset: Offset
- *  categories: comma-delimeted string of categories
+ *  address: string - A valid location to search within.
+ *  offset: number - Offset to return data from.
+ *  open_now: 'true' | 'false' - Search for restaurants that are open or not.
+ *  harder: 'true' | 'false' - Whether to look in a wider radius (5km) or not (2km).
  */
 server.get('/foodie/:foodType', async (req, res) => {
     const { lat, lng, address, offset, open_now, harder } = req.query;
     const { foodType } = req.params;
-    // console.log(req.query);
-    const data = await getYelpBusinesses(
-        lat, 
-        lng, 
-        address,
-        foodType,
-        offset, 
-        open_now, 
-        harder);
-
+    const data = await getYelpBusinesses(lat, lng, address,foodType,offset, open_now, harder);
     res.send(data);
 });
 
@@ -53,15 +41,7 @@ server.get('/foodie/test/:foodType', async (req,res) => {
     const { lat, lng, address, offset, open_now, harder } = req.query;
     const { foodType } = req.params;
     console.log(req.query);
-    const data = await testGetYelpBusinesses(
-        lat, 
-        lng, 
-        address,
-        foodType,
-        offset,
-        open_now,
-        harder);
-
+    const data = await testGetYelpBusinesses(lat, lng, address,foodType,offset,open_now,harder);
     console.log(`Data businesses field length: ${data.businesses.length}`)
     res.send(data);
 });
@@ -72,5 +52,3 @@ server.listen(port, err => {
     }
     return console.log(`Server listening is listening on ${port}`);
 })
-
-export {};
