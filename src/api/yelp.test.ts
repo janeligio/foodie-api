@@ -2,6 +2,8 @@ import axios from 'axios';
 import { randomizeBusinesses, extrapolateQuery, calculateNextOffset, nextRequestOffsets, buildQueryParams } from '../util/util';
 const KEY = process.env.YELP_API_KEY || require("../keys/keys").YELP_API_KEY;
 
+export let REMAINING_CALLS:number = 5000;
+
 
 export async function testGetYelpBusinesses(
     lat: string | undefined,
@@ -11,6 +13,15 @@ export async function testGetYelpBusinesses(
     offset: string | undefined,
     open: string | undefined,
     harder: string | undefined) {
+
+    // Check if remaining calls is exceeded.
+    if(REMAINING_CALLS < 10) {
+        return {
+            total: 0,
+            businesses: [],
+            error: 'Daily limit exceeded.'
+        }
+    }
 
     const hostname = 'https://api.yelp.com/v3/businesses/search?';
     let queries;
@@ -81,6 +92,7 @@ export async function testGetYelpBusinesses(
 
         newOffset = calculateNextOffset(offsets[offsets.length-1], total);
         const remainingCalls = restBusinesses[restBusinesses.length-1].headers['ratelimit-remaining'];
+        REMAINING_CALLS = remainingCalls;
         console.log(`Total businesses: ${total}`);
         console.log(`Total businesses returned: ${businesses.length}`);
         console.log(`Returned businesses in range: ${offset}-${newOffset || total}`);
@@ -94,6 +106,7 @@ export async function testGetYelpBusinesses(
     } else {
         newOffset = calculateNextOffset(offset, total);
         const remainingCalls = initialRequest.headers['ratelimit-remaining'];
+        REMAINING_CALLS = remainingCalls;
         console.log(`Total businesses: ${total}`);
         console.log(`Total businesses returned: ${businesses.length}`);
         console.log(`New offset: ${newOffset}`);
