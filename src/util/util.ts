@@ -41,6 +41,7 @@ export function extrapolateQuery(query) {
     let open_now = query.open;
     let limit:number = 50; // Max limit
     let offset:number = parseInt(query.offset) || 0;
+    let sort_by:string = 'rating';
 
     // Determine 'term' and 'categories' queries
     if(foodType === 'dessert'){
@@ -75,7 +76,8 @@ export function extrapolateQuery(query) {
         categories,
         open_now,
         limit,
-        offset
+        offset,
+        sort_by
     }
     return queries;
 }
